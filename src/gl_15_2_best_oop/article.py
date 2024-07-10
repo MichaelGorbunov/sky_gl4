@@ -38,3 +38,5 @@ if __name__ == '__main__':
 
     new_article_2 = Article.insert('test2', 'test2')
     print(new_article_2.article_id)
+    for _ in Article.articles.items():
+        print(_)
