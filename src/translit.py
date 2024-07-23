@@ -39,6 +39,7 @@ def transliterate(string):
 
 
     lower_case_letters = {u'а': u'a',
+                       u' ': u'_',#пробел
                        u'б': u'b',
                        u'в': u'v',
                        u'г': u'g',

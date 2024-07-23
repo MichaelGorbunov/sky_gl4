@@ -1,2 +1,2 @@
 from translit import transliterate
-print(transliterate("тестировщик"))
+print(transliterate("тестировщик пакетов Python"))
