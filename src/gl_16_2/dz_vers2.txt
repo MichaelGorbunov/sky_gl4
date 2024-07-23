@@ -1,0 +1,177 @@
+from abc import ABC, abstractmethod
+ 
+class InitPrintMixin:
+    def __init_print__(self, *args):
+        class_name = self.__class__.__name__
+        params = ', '.join([f"'{arg}'" if isinstance(arg, str) else str(arg) for arg in args])
+        print(f"{class_name}({params})")
+ 
+class BaseProduct(ABC):
+    def __init__(self, name, description, price, quantity):
+        if quantity <= 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+ 
+        self.name = name
+        self.description = description
+        self._price = price
+        self.quantity = quantity
+        super().__init__()
+ 
+    @property
+    def price(self):
+        return self._price
+ 
+    @price.setter
+    def price(self, value):
+        if value <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+        else:
+            self._price = value
+ 
+    @abstractmethod
+    def __str__(self):
+        pass
+ 
+    @classmethod
+    @abstractmethod
+    def new_product(cls, products):
+        pass
+ 
+    def __len__(self):
+        return self.quantity
+ 
+    def __add__(self, other):
+        if type(self) is type(other):
+            return self.price * self.quantity + other.price * other.quantity
+        raise TypeError("Ошибка сложения. Нельзя складывать не экземпляры одного класса")
+ 
+class Product(BaseProduct, InitPrintMixin):
+    def __init__(self, name, description, price, quantity):
+        super().__init__(name, description, price, quantity)
+        self.__init_print__(name, description, price, quantity)
+ 
+    @classmethod
+    def new_product(cls, products):
+        return cls(**products)
+ 
+    def __str__(self):
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+ 
+    def __repr__(self):
+        return f"Product('{self.name}', '{self.description}', {self.price}, {self.quantity})"
+ 
+    def __eq__(self, other):
+        if isinstance(other, Product):
+            return (self.name == other.name and
+                    self.description == other.description and
+                    self.price == other.price and
+                    self.quantity == other.quantity)
+        return False
+ 
+class Smartphone(Product):
+    def __init__(self, name, description, price, quantity, efficiency, model, memory, color):
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+        super().__init__(name, description, price, quantity)
+ 
+    @classmethod
+    def new_product(cls, products):
+        return cls(**products)
+ 
+    def __str__(self):
+        return f"{self.name} {self.model}, {self.price} руб. Остаток: {self.quantity} шт. (Цвет: {self.color}, Память: {self.memory}GB, Эффективность: {self.efficiency})"
+ 
+    def __repr__(self):
+        return f"Smartphone('{self.name}', '{self.description}', {self.price}, {self.quantity}, '{self.efficiency}', '{self.model}', {self.memory}, '{self.color}')"
+ 
+    def __eq__(self, other):
+        if isinstance(other, Smartphone):
+            return (super().__eq__(other) and
+                    self.efficiency == other.efficiency and
+                    self.model == other.model and
+                    self.memory == other.memory and
+                    self.color == other.color)
+        return False
+ 
+class LawnGrass(Product):
+    def __init__(self, name, description, price, quantity, country, germination_period, color):
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+        super().__init__(name, description, price, quantity)
+ 
+    @classmethod
+    def new_product(cls, products):
+        return cls(**products)
+ 
+    def __str__(self):
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт. (Цвет: {self.color}, Страна: {self.country}, Срок прорастания: {self.germination_period} дней)"
+ 
+    def __repr__(self):
+        return f"LawnGrass('{self.name}', '{self.description}', {self.price}, {self.quantity}, '{self.country}', {self.germination_period}, '{self.color}')"
+ 
+    def __eq__(self, other):
+        if isinstance(other, LawnGrass):
+            return (super().__eq__(other) and
+                    self.country == other.country and
+                    self.germination_period == other.germination_period and
+                    self.color == other.color)
+        return False
+ 
+class Category:
+    category_count = 0
+    product_count = 0
+ 
+    def __init__(self, name, description, products=None):
+        self.name = name
+        self.description = description
+        self.__products = products if products else []
+        Category.category_count += 1
+        Category.product_count += len(self.__products)
+ 
+    def add_product(self, product):
+        if isinstance(product, BaseProduct):
+            self.__products.append(product)
+            Category.product_count += 1
+        else:
+            raise TypeError("Можно добавить только объекты класса Product или его наследников (Smartphone/LawnGrass)")
+ 
+    @property
+    def products(self):
+        products = [str(product) for product in self.__products]
+        return "\n".join(products) + "\n"
+ 
+    @products.setter
+    def products(self, value):
+        if isinstance(value, list):
+            if all(isinstance(product, BaseProduct) for product in value):
+                self.__products = value
+            else:
+                raise TypeError("Можно добавить только объекты класса Product или его наследников (Smartphone/LawnGrass)")
+        elif isinstance(value, BaseProduct):
+            self.__products.append(value)
+        else:
+            raise TypeError("Можно добавить только объекты класса Product или его наследников (Smartphone/LawnGrass)")
+ 
+    def __str__(self):
+        total_products_count = sum([p.quantity for p in self.__products])
+        return f"{self.name}, количество продуктов: {total_products_count} шт."
+ 
+    def __add__(self, other):
+        if isinstance(other, Category):
+            total_cost = sum(product.price * product.quantity for product in self.__products)
+            total_cost += sum(product.price * product.quantity for product in other.__products)
+            return total_cost
+        raise TypeError("Ошибка сложения. Нельзя складывать не экземпляры одного класса")
+ 
+    def get_result(self):
+        return self.products
+ 
+    def middle_price(self):
+        total_price = sum(product.price * product.quantity for product in self.__products)
+        total_quantity = sum(product.quantity for product in self.__products)
+        if total_quantity == 0:
+            return 0
+        return total_price / total_quantity
